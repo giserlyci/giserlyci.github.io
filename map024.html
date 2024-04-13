@@ -1,0 +1,140 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+      <title>Intro to MapView - Create a 2D map | Sample | ArcGIS Maps SDK for JavaScript 4.29</title>
+    <style>
+      html,
+      body,
+       #mapViewDiv {
+            height: 90vh; 
+            margin-top: 60px; 
+        }
+    
+       #header {
+            background-color: #f8f8f8; 
+            padding: 10px;
+            text-align: center;
+            position: fixed; 
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+        }
+
+    #basemapGallery {
+      height: 20vh; 
+    }
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <script>
+      require(["esri/Map", "esri/views/MapView","esri/layers/FeatureLayer","esri/layers/TileLayer","esri/widgets/Legend","esri/widgets/ScaleBar","esri/widgets/Search","esri/widgets/LayerList","esri/rest/support/Query","esri/layers/GraphicsLayer","esri/widgets/Sketch","esri/widgets/BasemapGallery"], (Map, MapView,FeatureLayer,TileLayer,Legend,ScaleBar,Search,LayerList,Query,GraphicsLayer,Sketch,BasemapGallery) => {
+        var flayer = new FeatureLayer({url:"https://www.geosceneonline.cn/server/rest/services/Hosted/1points/FeatureServer"});
+        var tiledlayer = new TileLayer({url:"https://tiles.arcgis.com/tiles/nzS0F0zdNLvs7nc8/arcgis/rest/services/China_PopDens_2020/MapServer"});
+        
+        var graphicsLayer = new GraphicsLayer();
+        
+        const map = new Map({
+          basemap: "topo-vector",
+          layers:[flayer,tiledlayer,graphicsLayer]
+        });
+        //map.layers.add(flayer);
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          zoom: 4,
+          center: [120, 20] // longitude, latitude
+        });
+        const legend = new Legend({
+            view: view,
+            layerInfos: [
+              {
+                layer: flayer,
+                title: "公共事件"
+              }
+            ]
+          });
+       view.ui.add(legend, "bottom-right");
+       let scaleBar = new ScaleBar({
+       view: view,
+       style:"ruler",
+       unit:"dual"
+       });
+
+       view.ui.add(scaleBar, {
+       position: "bottom-left"
+      });
+      const searchWidget = new Search({
+      view: view
+      });
+      view.ui.add(searchWidget, {
+      position: "top-right",
+      index: 2
+      });
+      let layerList = new LayerList({
+      view: view
+      });
+      view.ui.add(layerList, {
+      position: "top-left"
+      });
+      var coordsWidget = document.createElement("div");
+coordsWidget.id = "coordsWidget";
+coordsWidget.className = "esri-widget esri-component";
+coordsWidget.style.padding = "7px 15px 5px";
+
+view.ui.add(coordsWidget, "bottom-right");
+      
+      function showCoordinates(pt) {
+  var coords =
+    "Lat/Lon " +
+    pt.latitude.toFixed(3) +
+    " " +
+    pt.longitude.toFixed(3) +
+    " | Scale 1:" +
+    Math.round(view.scale * 1) / 1 +
+    " | Zoom " +
+    view.zoom;
+  coordsWidget.innerHTML = coords;
+}
+
+view.watch("stationary", function (isStationary) {
+  showCoordinates(view.center);
+});
+
+view.on("pointer-move", function (evt) {
+  showCoordinates(view.toMap({ x: evt.x, y: evt.y }));
+});
+var sketch = new Sketch({
+  view: view,
+  layer: graphicsLayer
+});
+
+view.ui.add(sketch, "top-right");
+
+let basemapGallery = new BasemapGallery({
+  view: view
+});
+
+view.ui.add(basemapGallery, {
+  position: "top-left"
+});
+
+      }) 
+    </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+    <div id="header">
+    <h1>福州公共事件与中国2020年人口密度地图</h1>
+      </div>
+  </body>
+</html>
